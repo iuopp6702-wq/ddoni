@@ -9,3 +9,63 @@
     <p>여기에 제 프로젝트를 하나씩 올릴 예정이에요 😊</p>
   </body>
 </html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>나만의 지식 챗봇</title>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<style>
+  body { font-family:sans-serif; max-width:700px; margin:auto; padding:20px; }
+  .info-card { border:1px solid #ccc; border-radius:12px; padding:15px; margin:15px 0; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  .info-card img { max-width:100%; border-radius:10px; margin-top:10px; }
+</style>
+</head>
+<body>
+<h1>나만의 챗봇 🤖</h1>
+<input id="q" placeholder="질문을 입력하세요 (예: 민수는 몇살이야?)" 
+       style="width:100%;padding:12px;font-size:16px;">
+<div id="a" style="margin-top:25px;font-size:18px;"></div>
+
+<script>
+async function loadData() {
+  // 🔹 data 폴더 안의 모든 JSON 파일 로드
+  const files = ["data/info1.json", "data/info2.json"]; // 필요한 만큼 추가
+  const data = [];
+
+  for (const file of files) {
+    try {
+      const res = await fetch(file);
+      const json = await res.json();
+      data.push(json);
+    } catch (err) { console.warn("파일 불러오기 실패:", file); }
+  }
+  return data;
+}
+
+loadData().then(data => {
+  const fuse = new Fuse(data, { keys: ["title", "content"], includeScore: true });
+  const input = document.getElementById("q");
+  const answer = document.getElementById("a");
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const query = e.target.value;
+      const found = fuse.search(query);
+      if (found.length > 0) {
+        const best = found[0].item;
+        answer.innerHTML = `
+          <div class="info-card">
+            <h3>${best.title}</h3>
+            <p>${best.content}</p>
+            ${best.image ? `<img src="${best.image}" alt="">` : ""}
+          </div>`;
+      } else {
+        answer.innerHTML = "🤔 관련 정보를 찾을 수 없어요.";
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
